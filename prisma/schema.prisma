@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Todo {
+  id        Int      @id @default(autoincrement())
+  title     String
+  status    Status   @default(PENDING)
+  createdAt DateTime @default(now())
+  editedAt  DateTime
+  userId    Int
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String   @unique
+  picture   String
+  isOnline  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  editedAt  DateTime
+  Todo      Todo[]
+}
+
+model AuthModule {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  password  String    @unique
+  createdAt DateTime @default(now())
+  editedAt  DateTime @updatedAt
+}
+
+enum Status {
+  PENDING
+  WIP
+  COMPLETED
+}
