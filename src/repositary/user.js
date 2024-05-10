@@ -23,13 +23,14 @@ class UserRepositary {
   async getUserByUsername(username) {
     try {
       const user = await this.model.findUnique({
-        data: {
+        where: {
           username: username,
         },
       });
       return user;
     } catch (error) {
-      throw error;
+        const {message} = error;
+      throw {error: {message, path: "repositary layer"}};
     }
   }
 }

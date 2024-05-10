@@ -11,7 +11,7 @@ export const registerUserValidator = (req, res, next) => {
    
 
   const userSchema = z.object({
-    username: z.string().email().min(1, "Username is required"),
+    username: z.string().email(),
     password: z
       .string()
       .min(8, {message: "Password must be 8 characters long"})
@@ -26,9 +26,10 @@ export const registerUserValidator = (req, res, next) => {
     // console.log(parsed);
     next();
   } catch (error) {
+  const missingFields =  error.issues.map((issue)=>issue.path+" "+ issue.message.toLowerCase());
     return res.status(400).send({
         data:{},
-        message: error.issues[0].message,
+        message: `${missingFields.join(",")}`,
         success:false,
         err: error.issues[0]
     })
