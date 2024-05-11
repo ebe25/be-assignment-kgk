@@ -1,5 +1,5 @@
 import UserRepositary from "../repositary/user.js";
-import {comparePasswords} from "../utils/helper/authRelated.js";
+import {comparePasswords} from "../utils/helper/hashing.js";
 import jwt from "jsonwebtoken";
 import {
   ACCESS_TOKEN_SECRET,
@@ -50,7 +50,7 @@ class UserService {
       }
 
       const isPasswordMatch = await comparePasswords(password, dbUser.password);
-      console.log(isPasswordMatch);
+     
       if (!isPasswordMatch) {
         throw new Error("Invalid Password! Does'nt match 👎🏻, Try again");
       }
@@ -83,5 +83,6 @@ class UserService {
       throw error;
     }
   }
+
 }
 export default UserService;

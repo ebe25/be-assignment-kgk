@@ -1,6 +1,5 @@
 import {prisma} from "../config/server.js";
-import {hashPassword} from "../utils/helper/authRelated.js";
-import registerUserQueryClient from "../utils/triggers/createHashedPwUsers.js";
+import {hashPassword} from "../utils/helper/hashing.js";
 class UserRepositary {
   constructor() {
     this.model = prisma.authModule;
