@@ -1,20 +1,22 @@
 import jwt from "jsonwebtoken";
+import {
+  ACCESS_TOKEN_SECRET,
+  REFRESH_TOKEN_SECRET,
+} from "../../config/server.js";
 const {sign, verify} = jwt;
-export const generateAccessToken = () => {
+export const generateAccessToken = (payload) => {
   try {
-    const acessstoken = sign(payload, accessTokenPrivateKey, {
-      expiresIn: "1hr",
-    });
+    const acessstoken = sign({payload}, ACCESS_TOKEN_SECRET, {expiresIn: "1h"});
     return acessstoken;
   } catch (error) {
     throw error;
   }
 };
-//todo restructure this 
-export const generateRefreshToken = (payload, refreshTokenPrivatekey) => {
+//todo restructure this
+export const generateRefreshToken = (payload) => {
   try {
-    const refreshtoken = sign(payload, refreshTokenPrivatekey, {
-      expiresIn: "72hr",
+    const refreshtoken = sign({payload}, REFRESH_TOKEN_SECRET, {
+      exp: "72hr",
     });
     return refreshtoken;
   } catch (error) {

@@ -26,7 +26,6 @@ export const registerUserValidator = (req, res, next) => {
   try {
     // as schema is a obj, parsing with a string would be wrong lmao silly me!
     userSchema.parse(req.body);
-    // console.log(parsed);
     next();
   } catch (error) {
     const missingFields = error.issues.map(
@@ -42,16 +41,8 @@ export const registerUserValidator = (req, res, next) => {
 };
 
 export const verifyToken = async (req, res, next) => {
-  //have to have some user realted detail in the request body, assuming it is a protected route middleware
-  if (!req.body.username) {
-    return res.status(400).send({
-      success: false,
-      err: "Username is required", //just an assumption to work around with this middleware
-    });
-  }
-  const {username} = req.body;
-  const token = req.headers?.authorization.split(" ")[1];
-  if (!token) {
+  const access_token = req.headers.authorization.split(" ")[1];
+  if (!access_token) {
     return res.status(401).send({
       data: {},
       message: "UnAuthorized. Token not provided",
@@ -60,19 +51,22 @@ export const verifyToken = async (req, res, next) => {
     });
   }
   try {
-    const access_token_payload = verify(token, ACCESS_TOKEN_SECRET);
-    const usernameDb = await user.getUserByUsername(username);
-    if (access_token_payload.username === usernameDb) {
-      return res.status(200).send({
-        data: {},
-        message: "Valid and verified token. Access Granted ✅",
-        err: {},
-        success: true,
+    const access_token_payload = verify(access_token, ACCESS_TOKEN_SECRET);
+    const {id} = access_token_payload;
+    const invalidTokens = await TokensInBlackList(id.toString());
+    //checking if the token is invalid. i.d user has logged out
+    if (invalidTokens["invalid-access-token"] === access_token) {
+      return res.status(403).send({
+        data: null,
+        message: "User logged out. Login again",
+        err: "Invalid token",
+        success: false,
       });
     }
+    const userDb = await user.getUserById(id);
+    req.user = userDb;
     next();
   } catch (error) {
-    console.log("err", error);
     if (error.name === "JsonWebTokenError") {
       return res.status(400).send({
         data: error.name,
@@ -87,20 +81,48 @@ export const verifyToken = async (req, res, next) => {
         success: false,
         err: `${error.message}`,
       });
+    } else {
+      return res.status(500).send({
+        data: error.name,
+        message: error.message,
+        success: false,
+        err: "Internal server error",
+      });
     }
   }
 };
 
-export const refreshTokens = async (username, access_token) => {
+export const TokensInBlackList = async (userId) => {
   try {
-    //check if the user has logged out , checking the invalid/blacklisted tokens in the redis cache
-    // const tokenDetails = await redisClient.HGET(username,"invalid-refresh-token ");
-    // console.log("token details ", tokenDetails);
-
-    const res = await redisClient.HGETALL(username);
-    console.log(res["invalid-refresh-token"])
-    return res
+    // const {username} = await user.getUserById(Number(userId));
+    const response = await redisClient.HGETALL(userId);
+    return response;
   } catch (error) {
     throw error;
   }
+};
+
+export const refreshTokenValidator = async (req, res, next) => {
+  if (!req.headers["x-refresh-token"]) {
+    return res.status(400).send({
+      data: null,
+      message: `Bad request refresh token not provided.`,
+      success: false,
+      err: "Bad request",
+    });
+  }
+  next();
+};
+
+
+export const checkRefreshToken = (req, res, next) => {
+  const accessToken = req.headers.authorization;
+  const refreshToken = req.headers["x-refresh-token"];
+  if (!accessToken || !refreshToken) {
+    return res.status(401).json({
+      success: false,
+      message: "Unauthorized. Access token or refresh token not provided.",
+    });
+  }
+  next();
 };

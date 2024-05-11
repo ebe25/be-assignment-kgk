@@ -3,10 +3,13 @@ import {
   EXPIRE_REFRESH_TOKEN_THRESHOLD,
   REFRESH_TOKEN_SECRET,
 } from "../config/server.js";
-import {refreshTokens} from "../middlewares/authentication.js";
+import {TokensInBlackList} from "../middlewares/authentication.js";
 import UserService from "../service/user.js";
 import jwt from "jsonwebtoken";
-import {generateRefreshToken} from "../utils/helper/tokens.js";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from "../utils/helper/tokens.js";
 
 class UserController {
   constructor() {
@@ -66,12 +69,11 @@ class UserController {
         err: {},
       });
     } catch (error) {
-      console.log(error);
       return res.status(500).send({
         data: {},
         message: error.message,
         sucess: false,
-        err: error,
+        err: error.name,
       });
     }
   };
@@ -79,12 +81,10 @@ class UserController {
   refresh = async (req, res) => {
     const refresh_token = req.headers["x-refresh-token"];
     const userId = req.params.id;
+    // const user = get
 
     try {
-      const tokensDB = await refreshTokens(
-        req.body.username,
-        req.headers.authorization.split(" ")[1]
-      );
+      const tokensDB = await TokensInBlackList(userId);
       if (tokensDB["invalid-refresh-token"] === refresh_token) {
         return res.status(403).send({
           err: "Invalid refresh token",
@@ -106,31 +106,28 @@ class UserController {
       }
 
       //issue new access-token
-      const new_acess_token = jwt.sign(
-        refreshTokenPayload,
-        ACCESS_TOKEN_SECRET
-      );
-      // if (new_acess_token) {
-      //   return res.status(201).send({
-      //     data: {new_acess_token},
-      //     success: true,
-      //     message: "New Acess_token issued!",
-      //     err: null,
-      //   });
-      // }
-
+      const new_access_token = generateAccessToken(refreshTokenPayload);
       // if the expiration time of the current refresh token lesseer than the threshold, generate new refreshtoken
       const validity_of_current_refresh_token =
         refreshTokenPayload.exp - Math.floor(new Date() / 1000);
+      let new_refresh_token = "";
       if (validity_of_current_refresh_token < EXPIRE_REFRESH_TOKEN_THRESHOLD) {
-        const new_refresh_token = generateRefreshToken(
-          refreshTokenPayload,
-          REFRESH_TOKEN_SECRET
-        );
-        
+        new_refresh_token += generateRefreshToken(refreshTokenPayload);
       }
+
+      return res.status(200).send({
+        data: {new_access_token, new_refresh_token},
+        success: true,
+        message: "New Acess_token issued!",
+        err: null,
+      });
     } catch (error) {
-      throw error;
+      return res.status(500).send({
+        data: null,
+        success: false,
+        message: error.message,
+        err: error.name,
+      });
     }
   };
 }

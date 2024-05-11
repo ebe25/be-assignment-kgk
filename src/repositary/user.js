@@ -28,8 +28,21 @@ class UserRepositary {
       });
       return user;
     } catch (error) {
-        const {message} = error;
+      const {message} = error;
       throw {error: {message, path: "repositary layer"}};
+    }
+  }
+  async getUserById(id) {
+    try {
+      const user = await this.model.findUnique({
+        where: {
+          id: id,
+        },
+      });
+      return user;
+    } catch (error) {
+      const {message} = error;
+      throw error;
     }
   }
 }

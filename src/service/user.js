@@ -50,7 +50,7 @@ class UserService {
       }
 
       const isPasswordMatch = await comparePasswords(password, dbUser.password);
-     
+
       if (!isPasswordMatch) {
         throw new Error("Invalid Password! Does'nt match 👎🏻, Try again");
       }
@@ -72,17 +72,19 @@ class UserService {
     //user opts for logout- specifically will blacklist those tokens and they will be never used again
     try {
       const {access_token, refresh_token} = tokens;
-      const payload = verify(access_token, ACCESS_TOKEN_SECRET);
-      const key = payload.username;
-      await redisClient.HSET(key, {
-        "invalid-access-token": access_token,
-        "invalid-refresh-token": refresh_token,
-      })
+      const access_token_payload = verify(access_token, ACCESS_TOKEN_SECRET);
+      console.log(access_token_payload)
+      const key = access_token_payload.id;
+      if (key) {
+        await redisClient.hSet(`${key}`, {
+          "invalid-access-token": access_token,
+          "invalid-refresh-token": refresh_token,
+        });
+      }
     } catch (error) {
-      await redisClient.quit()
+      console.log(error);
       throw error;
     }
   }
-
 }
 export default UserService;

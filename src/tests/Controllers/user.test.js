@@ -1,9 +1,9 @@
-import UserService from "../service/user.js";
+import UserService from "../../service/user.js";
 import UserController from "../../controller/user.js";
 import mock from "../mocker.js"
 const controller=new UserController();
 
-jest.mock("../service/user.js");
+jest.mock("../../service/user.js");
 describe("to test the signup process",()=>{
     test("to check the flow is working fine",async()=>{
         const req=mock.mockRequest();
