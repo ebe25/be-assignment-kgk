@@ -52,7 +52,8 @@ export const verifyToken = async (req, res, next) => {
   const access_token = req.headers?.authorization?.split(" ")[1];
   try {
     const access_token_payload = verify(access_token, ACCESS_TOKEN_SECRET);
-    const {id} = access_token_payload;
+    console.log( access_token_payload.payload)
+    const {id} = access_token_payload.payload;
     const invalidTokens = await TokensInBlackList(id.toString());
     //checking if the token is invalid. i.d user has logged out
     if (invalidTokens["invalid-access-token"] === access_token) {
