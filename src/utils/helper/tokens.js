@@ -16,7 +16,7 @@ export const generateAccessToken = (payload) => {
 export const generateRefreshToken = (payload) => {
   try {
     const refreshtoken = sign({payload}, REFRESH_TOKEN_SECRET, {
-      exp: "72hr",
+      expiresIn: "72hr",
     });
     return refreshtoken;
   } catch (error) {
