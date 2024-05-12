@@ -107,11 +107,11 @@ class UserController {
 
       //issue new access-token
       const new_access_token = generateAccessToken(refreshTokenPayload);
+      const currentDate = Math.floor(new Date().getTime() / 1000);
       // if the expiration time of the current refresh token lesseer than the threshold, generate new refreshtoken
-      const validity_of_current_refresh_token =
-        refreshTokenPayload.exp - Math.floor(new Date() / 1000);
+      const timeRemainingOnRefreshToken = refreshTokenPayload.exp - currentDate;
       let new_refresh_token = "";
-      if (validity_of_current_refresh_token < EXPIRE_REFRESH_TOKEN_THRESHOLD) {
+      if (timeRemainingOnRefreshToken < EXPIRE_REFRESH_TOKEN_THRESHOLD) {
         new_refresh_token += generateRefreshToken(refreshTokenPayload);
       }
 

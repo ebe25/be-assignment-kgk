@@ -6,6 +6,10 @@ import {
   REFRESH_TOKEN_SECRET,
   redisClient,
 } from "../config/server.js";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from "../utils/helper/tokens.js";
 
 const {sign, verify} = jwt;
 
@@ -21,12 +25,8 @@ class UserService {
     refreshTokenPrivatekey
   ) => {
     try {
-      const accessToken = sign(payload, accessTokenPrivateKey, {
-        expiresIn: "1hr",
-      });
-      const refreshToken = sign(payload, refreshTokenPrivatekey, {
-        expiresIn: "24hr",
-      });
+      const accessToken = generateAccessToken(payload);
+      const refreshToken = generateRefreshToken(payload);
       return {accessToken, refreshToken};
     } catch (error) {
       throw new Error("Something went wrong while generating jwt token");
@@ -73,7 +73,7 @@ class UserService {
     try {
       const {access_token, refresh_token} = tokens;
       const access_token_payload = verify(access_token, ACCESS_TOKEN_SECRET);
-      console.log(access_token_payload)
+      console.log(access_token_payload);
       const key = access_token_payload.id;
       if (key) {
         await redisClient.hSet(`${key}`, {

@@ -51,11 +51,10 @@ export const verifyToken = async (req, res, next) => {
   }
   const access_token = req.headers?.authorization?.split(" ")[1];
   try {
-    const access_token_payload = verify(access_token, ACCESS_TOKEN_SECRET);
-    console.log( access_token_payload.payload)
-    const {id} = access_token_payload.payload;
-    const invalidTokens = await TokensInBlackList(id.toString());
+    var decoded  =jwt.verify(access_token, ACCESS_TOKEN_SECRET);
+    const {id} = decoded;
     //checking if the token is invalid. i.d user has logged out
+    const invalidTokens = await TokensInBlackList(id.toString());
     if (invalidTokens["invalid-access-token"] === access_token) {
       return res.status(403).send({
         data: null,
@@ -68,7 +67,7 @@ export const verifyToken = async (req, res, next) => {
     req.user = userDb;
     next();
   } catch (error) {
-    console.log("error in verifying token", error)
+    console.log("error in verifying token", error);
     if (error.name === "JsonWebTokenError") {
       return res.status(400).send({
         data: error.name,
@@ -115,7 +114,6 @@ export const refreshTokenValidator = async (req, res, next) => {
   }
   next();
 };
-
 
 export const checkRefreshToken = (req, res, next) => {
   const accessToken = req.headers.authorization;
