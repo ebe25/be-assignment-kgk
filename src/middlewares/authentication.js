@@ -41,8 +41,7 @@ export const registerUserValidator = (req, res, next) => {
 };
 
 export const verifyToken = async (req, res, next) => {
-  const access_token = req.headers.authorization.split(" ")[1];
-  if (!access_token) {
+  if (!req.headers.authorization) {
     return res.status(401).send({
       data: {},
       message: "UnAuthorized. Token not provided",
@@ -50,6 +49,7 @@ export const verifyToken = async (req, res, next) => {
       err: "Missing access token",
     });
   }
+  const access_token = req.headers?.authorization?.split(" ")[1];
   try {
     const access_token_payload = verify(access_token, ACCESS_TOKEN_SECRET);
     const {id} = access_token_payload;
@@ -67,6 +67,7 @@ export const verifyToken = async (req, res, next) => {
     req.user = userDb;
     next();
   } catch (error) {
+    console.log("error in verifying token", error)
     if (error.name === "JsonWebTokenError") {
       return res.status(400).send({
         data: error.name,
